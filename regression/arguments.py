@@ -32,6 +32,9 @@ def parse_args():
     # commands specific to the CelebA image completion task
     parser.add_argument('--use_ordered_pixels', action='store_true', default=False)
 
+    # jake commands
+    parser.add_argument('--num_fns', type=int, default=-1, help='if set, use finite number of training functions')
+
     args = parser.parse_args()
 
     # use the GPU if available

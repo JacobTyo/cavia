@@ -13,7 +13,7 @@ import torch.optim as optim
 
 import utils
 import tasks_sine, tasks_celebA
-from cavia_model import CaviaModel
+from cva_model import CvaModel
 from logger import Logger
 
 
@@ -22,9 +22,9 @@ def run(args, log_interval=5000, rerun=False):
 
     # see if we already ran this experiment
     code_root = os.path.dirname(os.path.realpath(__file__))
-    if not os.path.isdir('{}/{}_result_files/'.format(code_root, args.task)):
-        os.mkdir('{}/{}_result_files/'.format(code_root, args.task))
-    path = '{}/{}_result_files/'.format(code_root, args.task) + utils.get_path_from_args(args)
+    if not os.path.isdir('{}/cva_{}_result_files/'.format(code_root, args.task)):
+        os.mkdir('{}/cva_{}_result_files/'.format(code_root, args.task))
+    path = '{}/cva_{}_result_files/'.format(code_root, args.task) + utils.get_path_from_args(args)
 
     if os.path.exists(path + '.pkl') and not rerun:
         return utils.load_obj(path)
@@ -47,12 +47,13 @@ def run(args, log_interval=5000, rerun=False):
         raise NotImplementedError
 
     # initialise network
-    model = CaviaModel(n_in=task_family_train.num_inputs,
-                       n_out=task_family_train.num_outputs,
-                       num_context_params=args.num_context_params,
-                       n_hidden=args.num_hidden_layers,
-                       device=args.device
-                       ).to(args.device)
+    model = CvaModel(n_in=task_family_train.num_inputs,
+                     n_out=task_family_train.num_outputs,
+                     num_context_params=args.num_context_params,
+                     num_tasks=args.num_tasks,
+                     n_hidden=args.num_hidden_layers,
+                     device=args.device
+                     ).to(args.device)
 
     # intitialise meta-optimiser
     # (only on shared params - context parameters are *not* registered parameters of the model)
@@ -76,8 +77,12 @@ def run(args, log_interval=5000, rerun=False):
 
         for t in range(args.tasks_per_metaupdate):
 
+            # We want to be able to test 2 things:
+            #   1) update the network once for every task (so the tasks_per_metaupdate = 1
+            #   2) update the embeddings for every task, but then update the shared parameters wrt all tasks
+
             # reset private network weights
-            model.reset_context_params()
+            # model.reset_context_params()  # not needed for cva
 
             # get data for current task
             train_inputs = task_family_train.sample_inputs(args.k_meta_train, args.use_ordered_pixels).to(args.device)
@@ -95,11 +100,10 @@ def run(args, log_interval=5000, rerun=False):
                 task_loss = F.mse_loss(train_outputs, train_targets)
 
                 # compute gradient wrt context params
-                task_gradients = \
-                    torch.autograd.grad(task_loss, model.context_params, create_graph=not args.first_order)[0]
+                # can add the create_graph=not args.first_order here, but this makes it cva
+                task_gradients = torch.autograd.grad(task_loss, model.embedding.parameters())[0]
 
-                # update context params (this will set up the computation graph correctly)
-                model.context_params = model.context_params - args.lr_inner * task_gradients
+                # update embeddings (remember that the tensors keep track of the gradients)
 
             # ------------ compute meta-gradient on test loss of current task ------------
 
