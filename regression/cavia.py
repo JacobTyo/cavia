@@ -70,7 +70,10 @@ def run(args, log_interval=5000, rerun=False):
         meta_gradient = [0 for _ in range(len(model.state_dict()))]
 
         # sample tasks
-        target_functions = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+        if args.num_fns > -1:
+            target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+        else:
+            target_functions = task_family_train.sample_tasks(args.tasks_per_metaupdate)
 
         # --- inner loop ---
 
@@ -189,7 +192,10 @@ def eval_cavia(args, model, task_family, num_updates, n_tasks=100, return_gradno
     for t in range(n_tasks):
 
         # sample a task
-        target_function = task_family.sample_task()
+        if args.num_fns > -1:
+            target_function, idxs = task_family.sample_task()
+        else:
+            target_function = task_family.sample_task()
 
         # reset context parameters
         model.reset_context_params()
