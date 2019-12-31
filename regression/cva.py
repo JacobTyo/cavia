@@ -24,7 +24,7 @@ def run(args, log_interval=5000, rerun=False):
     code_root = os.path.dirname(os.path.realpath(__file__))
     if not os.path.isdir('{}/cva_{}_result_files/'.format(code_root, args.task)):
         os.mkdir('{}/cva_{}_result_files/'.format(code_root, args.task))
-    path = '{}/cva_{}_result_files/'.format(code_root, args.task) + utils.get_path_from_args(args)
+    path = '{}/cva_{}_result_files/'.format(code_root, args.task) + args.id  # utils.get_path_from_args(args)
 
     if os.path.exists(path + '.pkl') and not rerun:
         return utils.load_obj(path)
