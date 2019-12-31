@@ -1,6 +1,7 @@
 import arguments
 import cavia
 import maml
+import cva
 
 
 if __name__ == '__main__':
@@ -9,5 +10,7 @@ if __name__ == '__main__':
 
     if args.maml:
         logger = maml.run(args, log_interval=100, rerun=True)
+    elif args.cva:
+        logger = cva.run(args, log_interval=100, rerun=True)
     else:
         logger = cavia.run(args, log_interval=100, rerun=True)

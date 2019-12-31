@@ -35,10 +35,11 @@ class RegressionTasksSinusoidal:
             # get some random indexes
             idx = np.random.randint(self.total_tasks)
             amplitude, phase = self.fns[0, idx], self.fns[1, idx]
+            return self.get_target_function(amplitude, phase), idx
         else:
             amplitude = np.random.uniform(self.amplitude_range[0], self.amplitude_range[1])
             phase = np.random.uniform(self.phase_range[0], self.phase_range[1])
-        return self.get_target_function(amplitude, phase)
+            return self.get_target_function(amplitude, phase)
 
     @staticmethod
     def get_target_function(amplitude, phase):
@@ -67,8 +68,12 @@ class RegressionTasksSinusoidal:
             target_functions.append(self.get_target_function(amplitude[i], phase[i]))
 
         if return_specs:
+            if self.total_tasks > -1:
+                return target_functions, amplitude, phase, idxs
             return target_functions, amplitude, phase
         else:
+            if self.total_tasks > -1:
+                return target_functions, idxs
             return target_functions
 
     def sample_datapoints(self, batch_size):

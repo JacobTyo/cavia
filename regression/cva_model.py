@@ -19,6 +19,7 @@ class CvaModel(nn.Module):
         super(CvaModel, self).__init__()
 
         self.device = device
+        self.n_in = n_in
 
         # fully connected layers
         self.fc_layers = nn.ModuleList()
@@ -29,17 +30,18 @@ class CvaModel(nn.Module):
 
         self.num_context_params = num_context_params
         # use embedding for each task
-        self.embedding = nn.Embedding(num_context_params, num_tasks)
+        self.embedding = nn.Embedding(num_tasks, num_context_params)
+        self.embedding.weight.data.fill_(0)
 
     def forward(self, x):
 
         # concatenate input with context parameters
-        latent = x[:, self.dim_input:]
-        x = x[:, :self.dim_input]
+        latent = x[:, self.n_in:]
+        x = x[:, :self.n_in]
 
-        latent = self.embedding(latent)
+        latent = self.embedding(latent.flatten().long()).float()
 
-        x = torch.cat((x.reshape(-1, 1), latent.reshape(-1, self.num_context_params)), dim=1)
+        x = torch.cat((x.reshape(-1, 1), latent.reshape(-1, self.num_context_params)), dim=1).float()
 
         for k in range(len(self.fc_layers) - 1):
             x = F.relu(self.fc_layers[k](x))
