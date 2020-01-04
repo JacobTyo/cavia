@@ -74,6 +74,10 @@ def run(args, log_interval=5000, rerun=False):
         # sample tasks
         target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
 
+        # if flag is set, reinitialize embedding
+        if args.reinit_emb:
+            model.zero_embeddings()
+
         # --- inner loop ---
 
         for t in range(args.tasks_per_metaupdate):
@@ -114,8 +118,6 @@ def run(args, log_interval=5000, rerun=False):
                     meta_gradient[i] += param.grad
 
                 embedding_optimizer.step()
-                # pretty sure this is fine, but I need to save the gradients for the main network.
-
 
                 # task_gradients = torch.autograd.grad(task_loss, model.embedding.parameters())[0]
 
