@@ -89,8 +89,8 @@ def run(args, log_interval=5000, rerun=False):
             train_inputs = task_family_train.sample_inputs(args.k_meta_train, args.use_ordered_pixels).to(args.device)
 
             # append id's
-            train_inputs_orig = train_inputs
-            train_inputs = torch.cat((train_inputs, idxs[t]*torch.ones((train_inputs.shape[0], 1))), dim=1)
+            train_inputs_orig = train_inputs.clone()
+            train_inputs = torch.cat((train_inputs, (idxs[t]*torch.ones((train_inputs.shape[0], 1))).to(args.device)), dim=1)
 
 
             for _ in range(args.num_inner_updates):
@@ -126,8 +126,8 @@ def run(args, log_interval=5000, rerun=False):
             # get test data
             test_inputs = task_family_train.sample_inputs(args.k_meta_test, args.use_ordered_pixels).to(args.device)
 
-            test_inputs_orig = test_inputs
-            test_inputs = torch.cat((test_inputs, idxs[t]*torch.ones((test_inputs.shape[0], 1))), dim=1)
+            test_inputs_orig = test_inputs.clone()
+            test_inputs = torch.cat((test_inputs, (idxs[t]*torch.ones((test_inputs.shape[0], 1))).to(args.device)), dim=1)
 
             # get outputs after update
             test_outputs = model(test_inputs)
@@ -228,8 +228,8 @@ def eval_cva(args, model, task_family, num_updates, n_tasks=100, return_gradnorm
         # get data for current task
         curr_inputs = task_family.sample_inputs(args.k_shot_eval, args.use_ordered_pixels).to(args.device)
         # append id's
-        curr_inputs_orig = curr_inputs
-        curr_inputs = torch.cat((curr_inputs, (ids+offset)*torch.ones((curr_inputs.shape[0], 1))), dim=1)
+        curr_inputs_orig = curr_inputs.clone()
+        curr_inputs = torch.cat((curr_inputs, ((ids+offset)*torch.ones((curr_inputs.shape[0], 1))).to(args.device)), dim=1)
         curr_targets = target_function(curr_inputs_orig)
 
         # ------------ update on current task ------------
@@ -266,8 +266,8 @@ def eval_cva(args, model, task_family, num_updates, n_tasks=100, return_gradnorm
 
         # compute true loss on entire input range
         model.eval()
-        input_range_orig = input_range
-        input_range = torch.cat((input_range, (ids+offset)*torch.ones((input_range.shape[0], 1))), dim=1)
+        input_range_orig = input_range.clone()
+        input_range = torch.cat((input_range, ((ids+offset)*torch.ones((input_range.shape[0], 1))).to(args.device)), dim=1)
         losses.append(F.mse_loss(model(input_range), target_function(input_range_orig)).detach().item())
         model.train()
 
