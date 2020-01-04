@@ -37,6 +37,7 @@ def parse_args():
     parser.add_argument('--cva', action='store_true', default=False, help='run CVA')
     parser.add_argument('--num_eval_updates', type=int, default=1, help='how many iterations to finetune during eval')
     parser.add_argument('--id', type=str, default="testing", help='just used for naming')
+    parser.add_argument('--reinit_emb', action='store_true', default=False, help='reinitialize the embedding every step or not')
 
     args = parser.parse_args()
 

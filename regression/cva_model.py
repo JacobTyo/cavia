@@ -31,7 +31,7 @@ class CvaModel(nn.Module):
         self.num_context_params = num_context_params
         # use embedding for each task
         self.embedding = nn.Embedding(num_tasks, num_context_params)
-        self.embedding.weight.data.fill_(0)
+        self.zero_embeddings()
 
     def forward(self, x):
 
@@ -48,3 +48,6 @@ class CvaModel(nn.Module):
         y = self.fc_layers[-1](x)
 
         return y
+
+    def zero_embeddings(self):
+        self.embedding.weight.data.fill_(0)
