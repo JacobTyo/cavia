@@ -159,6 +159,9 @@ def run(args, log_interval=5000, rerun=False):
             logger.test_loss.append(loss_mean)
             logger.test_conf.append(loss_conf)
 
+            # keep track of elapsed time
+            logger.track_time()
+
             # save logging results
             utils.save_obj(logger, path)
 

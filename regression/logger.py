@@ -15,6 +15,10 @@ class Logger:
         self.test_loss = []
         self.test_conf = []
 
+        self.elapsed_time = []
+
+        self.init_time = time.time()
+
         self.best_valid_model = None
 
     def print_info(self, iter_idx, start_time):
@@ -30,3 +34,6 @@ class Logger:
                 np.round(self.test_conf[-1], 4),
             )
         )
+
+    def track_time(self):
+        self.elapsed_time.append(time.time() - self.init_time)
