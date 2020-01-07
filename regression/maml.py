@@ -22,9 +22,9 @@ def run(args, log_interval=5000, rerun=False):
 
     # see if we already ran this experiment
     code_root = os.path.dirname(os.path.realpath(__file__))
-    if not os.path.isdir('{}/{}_result_files/'.format(code_root, args.task)):
-        os.mkdir('{}/{}_result_files/'.format(code_root, args.task))
-    path = '{}/{}_result_files/'.format(code_root, args.task) + utils.get_path_from_args(args)
+    if not os.path.isdir('{}/maml_{}_result_files/'.format(code_root, args.task)):
+        os.mkdir('{}/maml_{}_result_files/'.format(code_root, args.task))
+    path = '{}/maml_{}_result_files/'.format(code_root, args.task) + args.id
 
     if os.path.exists(path + '.pkl') and not rerun:
         return utils.load_obj(path)
@@ -38,9 +38,9 @@ def run(args, log_interval=5000, rerun=False):
 
     # get the task family
     if args.task == 'sine':
-        task_family_train = tasks_sine.RegressionTasksSinusoidal()
-        task_family_valid = tasks_sine.RegressionTasksSinusoidal()
-        task_family_test = tasks_sine.RegressionTasksSinusoidal()
+        task_family_train = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
+        task_family_valid = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
+        task_family_test = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
     elif args.task == 'celeba':
         task_family_train = tasks_celebA.CelebADataset('train', args.device)
         task_family_valid = tasks_celebA.CelebADataset('valid', args.device)
@@ -76,7 +76,10 @@ def run(args, log_interval=5000, rerun=False):
         meta_gradient = [0 for _ in range(len(copy_weights + copy_biases) + 1)]
 
         # sample tasks
-        target_functions = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+        if args.num_fns > -1:
+            target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+        else:
+            target_functions = task_family_train.sample_tasks(args.tasks_per_metaupdate)
 
         for t in range(args.tasks_per_metaupdate):
 
@@ -181,6 +184,9 @@ def run(args, log_interval=5000, rerun=False):
             logger.test_loss.append(loss_mean)
             logger.test_conf.append(loss_conf)
 
+            # keep track of elapsed time
+            logger.track_time()
+
             # save logging results
             utils.save_obj(logger, path)
 
@@ -224,7 +230,10 @@ def eval(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=Fal
         model.task_context = copy_context.clone()
 
         # sample a task
-        target_function = task_family.sample_task()
+        if args.num_fns > -1:
+            target_function, idxs = task_family.sample_task()
+        else:
+            target_function = task_family.sample_task()
 
         # get data for current task
         curr_inputs = task_family.sample_inputs(args.k_shot_eval, args.use_ordered_pixels).to(args.device)
