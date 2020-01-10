@@ -17,7 +17,11 @@ class Logger:
 
         self.elapsed_time = []
 
+        self.training_time = []
+
         self.init_time = time.time()
+        self.eval_start_time = time.time()
+        self.eval_time = 0
 
         self.best_valid_model = None
 
@@ -37,3 +41,8 @@ class Logger:
 
     def track_time(self):
         self.elapsed_time.append(time.time() - self.init_time)
+        self.eval_time += time.time() - self.eval_start_time
+        self.training_time.append((time.time() - self.init_time) - self.eval_time)
+
+    def time_eval(self):
+        self.eval_start_time = time.time()

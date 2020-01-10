@@ -141,6 +141,9 @@ def run(args, log_interval=5000, rerun=False):
 
         if i_iter % log_interval == 0:
 
+            # keep track of time spent evaluating
+            logger.time_eval()
+
             # evaluate on training set
             loss_mean, loss_conf = eval_cavia(args, copy.deepcopy(model), task_family=task_family_train,
                                               num_updates=args.num_inner_updates)
