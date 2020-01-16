@@ -78,6 +78,11 @@ def run(args, log_interval=5000, rerun=False):
         if args.reinit_emb:
             model.zero_embeddings()
 
+        # if reset_embs are set, reset embeddings every x iters
+        if args.reset_emb > -1:
+            if i_iter % args.reset_emb == 0:
+                model.zero_embeddings()
+
         # --- inner loop ---
 
         for t in range(args.tasks_per_metaupdate):

@@ -37,8 +37,8 @@ def run(args, log_interval=5000, rerun=False):
     # get the task family
     if args.task == 'sine':
         task_family_train = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
-        task_family_valid = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
-        task_family_test = tasks_sine.RegressionTasksSinusoidal(args.num_fns)
+        task_family_valid = tasks_sine.RegressionTasksSinusoidal(10000)
+        task_family_test = tasks_sine.RegressionTasksSinusoidal(10000)
     elif args.task == 'celeba':
         task_family_train = tasks_celebA.CelebADataset('train', device=args.device)
         task_family_valid = tasks_celebA.CelebADataset('valid', device=args.device)

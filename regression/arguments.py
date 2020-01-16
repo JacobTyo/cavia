@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument('--num_eval_updates', type=int, default=1, help='how many iterations to finetune during eval')
     parser.add_argument('--id', type=str, default="testing", help='just used for naming')
     parser.add_argument('--reinit_emb', action='store_true', default=False, help='reinitialize the embedding every step or not')
+    parser.add_argument('--reset_emb', type=int, default=-1, help='if set (i.e. > -1), reset the embeddings every x steps.')
 
     args = parser.parse_args()
 
