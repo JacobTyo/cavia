@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-anum_fns=(1 10 100 1000 10000 100000 1000000)
+anum_fns=(1)
 anum_inner_updates=(1)
 atasks_per_metaupdate=(25)
 
