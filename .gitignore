@@ -19,3 +19,13 @@ plots/
 results/
 *result_plots
 *result_files
+
+classification/data/miniimagenet/images/mini-imagenet.tar.gz
+
+classification/data/OmniGlot/omniglot.tar.gz
+
+classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-test.pkl
+
+classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-train.pkl
+
+classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-val.pkl

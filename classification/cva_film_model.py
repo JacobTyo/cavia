@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class CondConvNet(nn.Module):
+class CvaFilmConvNet(nn.Module):
     def __init__(self,
                  num_classes,
                  num_filters,
@@ -15,7 +15,7 @@ class CondConvNet(nn.Module):
                  initialisation,
                  device
                  ):
-        super(CondConvNet, self).__init__()
+        super(CvaFilmConvNet, self).__init__()
 
         self.num_classes = num_classes
         self.num_filters = num_filters

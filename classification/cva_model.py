@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class CondConvNet(nn.Module):
+class CvaConvNet(nn.Module):
     def __init__(self,
                  num_classes,
                  num_filters,
@@ -15,7 +15,7 @@ class CondConvNet(nn.Module):
                  initialisation,
                  device
                  ):
-        super(CondConvNet, self).__init__()
+        super(CvaConvNet, self).__init__()
 
         self.num_classes = num_classes
         self.num_filters = num_filters
@@ -24,6 +24,8 @@ class CondConvNet(nn.Module):
         self.context_in = context_in
         self.num_film_hidden_layers = num_film_hidden_layers
         self.kernel_size = 3
+
+        # need to use an embedding instead of a context
 
         # -- shared network --
 
@@ -145,6 +147,8 @@ class CondConvNet(nn.Module):
         self.context_params.requires_grad = True
 
     def forward(self, x):
+
+        # for CVA, we need to separate x into the id for the embedding, and the actual input x.
 
         # pass through convolutional layer
         h1 = self.conv1(x)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-anum_fns=(1)
-anum_inner_updates=(1)
+anum_fns=($1)
+anum_inner_updates=(10)
 atasks_per_metaupdate=(25)
 
 

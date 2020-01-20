@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 from torchvision.transforms import transforms
 
 
-class MiniImagenet(Dataset):
+class MiniImagenetFixed(Dataset):
     """
     put mini-imagenet files as :
     root :
