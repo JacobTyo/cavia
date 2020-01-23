@@ -57,8 +57,10 @@ def run(args, log_interval=5000, rerun=False):
 
     # intitialise meta-optimiser
     # (only on shared params - context parameters are *not* registered parameters of the model)
-    meta_optimiser = optim.Adam(model.parameters(), args.lr_meta)
+    model_params_noemb = [param for name, param in model.named_parameters() if 'embed' not in name]
+    meta_optimiser = optim.Adam(model_params_noemb, args.lr_meta)
     embedding_optimizer = optim.Adam(model.embedding.parameters(), args.lr_inner)
+
 
     # initialise loggers
     logger = Logger()
@@ -104,6 +106,8 @@ def run(args, log_interval=5000, rerun=False):
 
             for _ in range(args.num_inner_updates):
                 # forward through model
+
+                # this doesn't happen in cavia
                 train_outputs = model(train_inputs)
 
                 # get targets
@@ -166,8 +170,9 @@ def run(args, log_interval=5000, rerun=False):
                 if 'embedding' in name:
                     param.grad = None
 
-        # do update step on shared model
+        # do update step on shared model and embeddings
         meta_optimiser.step()
+        embedding_optimizer.step()
 
         # ------------ logging ------------
 
