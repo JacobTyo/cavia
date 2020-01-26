@@ -12,7 +12,7 @@ else:
 
 
 class EnvWorker(mp.Process):
-    def __init__(self, remote, env_fn, queue, lock):
+    def __init__(self, remote, env_fn, queue, lock, cva=False):
         super(EnvWorker, self).__init__()
         self.remote = remote
         self.env = env_fn()
@@ -20,6 +20,7 @@ class EnvWorker(mp.Process):
         self.lock = lock
         self.task_id = None
         self.done = False
+        self.cva = cva
 
     def empty_step(self):
         observation = np.zeros(self.env.observation_space.shape,
@@ -34,8 +35,12 @@ class EnvWorker(mp.Process):
                 self.done = (self.task_id is None)
             except queue.Empty:
                 self.done = True
-        observation = (np.zeros(self.env.observation_space.shape,
-                                dtype=np.float32) if self.done else self.env.reset())
+        if self.cva:
+            observation = (np.zeros((self.env.observation_space.shape[0] + 1,),
+                                    dtype=np.float32) if self.done else self.env.reset())
+        else:
+            observation = (np.zeros(self.env.observation_space.shape,
+                                    dtype=np.float32) if self.done else self.env.reset())
         return observation
 
     def run(self):
@@ -67,10 +72,10 @@ class EnvWorker(mp.Process):
 
 
 class SubprocVecEnv(gym.Env):
-    def __init__(self, env_factory, queue):
+    def __init__(self, env_factory, queue, cva=False):
         self.lock = mp.Lock()
         self.remotes, self.work_remotes = zip(*[mp.Pipe() for _ in env_factory])
-        self.workers = [EnvWorker(remote, env_fn, queue, self.lock)
+        self.workers = [EnvWorker(remote, env_fn, queue, self.lock, cva=cva)
                         for (remote, env_fn) in zip(self.work_remotes, env_factory)]
         for worker in self.workers:
             worker.daemon = True

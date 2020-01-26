@@ -6,6 +6,8 @@ from torch.nn.utils.convert_parameters import (vector_to_parameters,
 from rl_utils.optimization import conjugate_gradient
 from rl_utils.torch_utils import (weighted_mean, detach_distribution, weighted_normalize)
 
+from policies.normal_mlp import CvaMLPPolicy
+
 
 class MetaLearner(object):
     """Meta-learner
@@ -58,7 +60,12 @@ class MetaLearner(object):
     def adapt(self, episodes, first_order=False, params=None, lr=None):
         """Adapt the parameters of the policy network to a new task, from 
         sampled trajectories `episodes`, with a one-step gradient update [1].
+
+        However, if we are using CVA, then this should just be the step function.
         """
+        if isinstance(self.policy, CvaMLPPolicy):
+            loss = self.step(episodes)
+            return self.policy.parameters(), loss
 
         if lr is None:
             lr = self.fast_lr
@@ -74,7 +81,7 @@ class MetaLearner(object):
 
         return params, loss
 
-    def sample(self, tasks, first_order=False):
+    def sample(self, tasks, first_order=False, idsx=None):
         """Sample trajectories (before and after the update of the parameters) 
         for all the tasks `tasks`.
         """

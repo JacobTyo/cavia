@@ -31,6 +31,7 @@ class Navigation2DEnv(gym.Env):
         self._goal = task.get('goal', np.zeros(2, dtype=np.float32))
         self._state = np.zeros(2, dtype=np.float32)
         self.seed()
+        self.goal_id = -1
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -41,12 +42,22 @@ class Navigation2DEnv(gym.Env):
         tasks = [{'goal': goal} for goal in goals]
         return tasks
 
-    def reset_task(self, task):
+    def sample_tasks_finite(self, num_tasks, total_num_tasks):
+        goals_list = np.linspace(-0.5, 0.5, total_num_tasks)
+        idxs = self.np_random.choice(len(goals_list), size=(num_tasks, 2))
+        goals = goals_list[idxs]
+        tasks = [{'goal': goal} for goal in goals]
+        return tasks, idxs
+
+    def reset_task(self, task, id=None):
+        self.goal_id = id
         self._task = task
         self._goal = task['goal']
 
     def reset(self, env=True):
         self._state = np.zeros(2, dtype=np.float32)
+        if self.goal_id is not None:
+            self._state = np.concatenate((self._state, self.goal_id), dim=1)
         return self._state
 
     def step(self, action):
@@ -58,5 +69,8 @@ class Navigation2DEnv(gym.Env):
         y = self._state[1] - self._goal[1]
         reward = -np.sqrt(x ** 2 + y ** 2)
         done = ((np.abs(x) < 0.01) and (np.abs(y) < 0.01))
+
+        if self.goal_id is not None:
+            self._state = np.concatenate((self._state, self.goal_id), dim=1)
 
         return self._state, reward, done, self._task
