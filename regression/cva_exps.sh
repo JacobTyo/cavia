@@ -11,8 +11,8 @@ for num_fns in "${anum_fns[@]}"; do
       for tasks_per_metaupdate in "${atasks_per_metaupdate[@]}"; do
 #	for reset_num in "${reset_nums[@]}"; do 
           # normal
-          tsk='difflrs_irbig'_${num_fns}_${num_eval_updates}_${num_inner_updates}_${tasks_per_metaupdate}
-          python ./main.py --cva --n_iter 400000 --num_fns ${num_fns} --lr_inner 0.001 --lr_meta 0.0001 \
+          tsk='reset2'_${num_fns}_${num_eval_updates}_${num_inner_updates}_${tasks_per_metaupdate}
+          python ./main.py --cva --n_iter 400000 --num_fns ${num_fns} --lr_inner 0.0001 --lr_meta 0.001 \
             --tasks_per_metaupdate ${tasks_per_metaupdate} --num_inner_updates ${num_inner_updates} \
             --num_eval_updates ${num_eval_updates} --id "${tsk}" 
 #        done

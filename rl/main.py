@@ -7,7 +7,7 @@ import time
 import numpy as np
 import scipy.stats as st
 import torch
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import utils
 from arguments import parse_args
