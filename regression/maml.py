@@ -56,8 +56,8 @@ def run(args, log_interval=5000, rerun=False):
                             device=args.device
                             ).to(args.device)
 
-    if torch.cuda.device_count() > 1:
-        model_inner = torch.nn.DataParallel(model_inner).to(args.device)
+    # if torch.cuda.device_count() > 1:
+    #     model_inner = torch.nn.DataParallel(model_inner).to(args.device)
 
 
     model_outer = copy.deepcopy(model_inner)

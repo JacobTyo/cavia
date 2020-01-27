@@ -27,7 +27,7 @@ class BatchSampler(object):
         self._env = gym.make(env_name)
         self._env.seed(seed)
         self.total_tasks = total_tasks
-        # self.sample_tasks(10)
+        self.sample_tasks(self.total_tasks)
 
     def sample(self, policy, params=None, gamma=0.95, batch_size=None):
         if batch_size is None:

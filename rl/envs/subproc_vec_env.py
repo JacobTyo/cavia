@@ -12,10 +12,13 @@ else:
 
 
 class EnvWorker(mp.Process):
-    def __init__(self, remote, env_fn, queue, lock, cva=False):
+    def __init__(self, remote, env_fn, queue, lock, cva=False, total_tasks=100):
         super(EnvWorker, self).__init__()
         self.remote = remote
         self.env = env_fn()
+        self.total_tasks = total_tasks
+        if cva:
+            self.env.unwrapped.set_finite(True, total_tasks)
         self.queue = queue
         self.lock = lock
         self.task_id = None
