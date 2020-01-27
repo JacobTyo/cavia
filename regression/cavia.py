@@ -54,8 +54,8 @@ def run(args, log_interval=5000, rerun=False):
                        device=args.device
                        ).to(args.device)
 
-    # if torch.cuda.device_count() > 1:
-    #     model = torch.nn.DataParallel(model).to(args.device)
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model).to(args.device)
 
 
     # intitialise meta-optimiser
