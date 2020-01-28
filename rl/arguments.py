@@ -72,6 +72,12 @@ def parse_args():
                         help='make everything deterministic (set cudnn seed; num_workers=1; '
                              'will slow things down but make them reproducible!)')
 
+    # Jake
+    parser.add_argument('--cva', action='store_true', default=False,
+                        help='use this flag to run the CVA method.')
+    parser.add_argument('--total_tasks', type=int, default=None,
+                        help='if not set, use infinite tasks, else use the specified number.')
+
     args = parser.parse_args()
 
     if args.make_deterministic:

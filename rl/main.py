@@ -14,7 +14,7 @@ from arguments import parse_args
 from baseline import LinearFeatureBaseline
 from metalearner import MetaLearner
 from policies.categorical_mlp import CategoricalMLPPolicy
-from policies.normal_mlp import NormalMLPPolicy, CaviaMLPPolicy
+from policies.normal_mlp import NormalMLPPolicy, CaviaMLPPolicy, CvaMLPPolicy
 from sampler import BatchSampler
 
 
@@ -62,9 +62,9 @@ def main(args):
                                             '2DNavigation-v0'])
 
     # subfolders for logging
-    method_used = 'maml' if args.maml else 'cavia'
+    method_used = 'maml' if args.maml else 'cva' if args.cva else 'cavia'
     num_context_params = str(args.num_context_params) + '_' if not args.maml else ''
-    output_name = num_context_params + 'lr=' + str(args.fast_lr) + 'tau=' + str(args.tau)
+    output_name = num_context_params + 'ntf=' + str(args.total_tasks) + 'lr=' + str(args.fast_lr) + 'tau=' + str(args.tau)
     output_name += '_' + datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S')
     dir_path = os.path.dirname(os.path.realpath(__file__))
     log_folder = os.path.join(os.path.join(dir_path, 'logs'), args.env_name, method_used, output_name)
@@ -88,10 +88,25 @@ def main(args):
         json.dump(config, f, indent=2)
 
     sampler = BatchSampler(args.env_name, batch_size=args.fast_batch_size, num_workers=args.num_workers,
-                           device=args.device, seed=args.seed)
+                           device=args.device, seed=args.seed, total_tasks=args.total_tasks, cva=args.cva)
 
     if continuous_actions:
-        if not args.maml:
+        if args.maml:
+            policy = NormalMLPPolicy(
+                int(np.prod(sampler.envs.observation_space.shape)),
+                int(np.prod(sampler.envs.action_space.shape)),
+                hidden_sizes=(args.hidden_size,) * args.num_layers
+            )
+        elif args.cva:
+            policy = CvaMLPPolicy(
+                int(np.prod(sampler.envs.observation_space.shape)),
+                int(np.prod(sampler.envs.action_space.shape)),
+                embedding_size=args.total_tasks,
+                hidden_sizes=(args.hidden_size,) * args.num_layers,
+                num_context_params=args.num_context_params,
+                device=args.device
+            )
+        else:
             policy = CaviaMLPPolicy(
                 int(np.prod(sampler.envs.observation_space.shape)),
                 int(np.prod(sampler.envs.action_space.shape)),
@@ -99,13 +114,8 @@ def main(args):
                 num_context_params=args.num_context_params,
                 device=args.device
             )
-        else:
-            policy = NormalMLPPolicy(
-                int(np.prod(sampler.envs.observation_space.shape)),
-                int(np.prod(sampler.envs.action_space.shape)),
-                hidden_sizes=(args.hidden_size,) * args.num_layers
-            )
     else:
+        # TODO: Add CVA policy
         if not args.maml:
             raise NotImplementedError
         else:
@@ -124,16 +134,20 @@ def main(args):
     for batch in range(args.num_batches):
 
         # get a batch of tasks
-        tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
+        if args.cva:
+            tasks, idxs = sampler.sample_tasks(num_tasks=args.meta_batch_size)
+        else:
+            tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
 
         # do the inner-loop update for each task
         # this returns training (before update) and validation (after update) episodes
         episodes, inner_losses = metalearner.sample(tasks, first_order=args.first_order)
 
         # take the meta-gradient step
-        outer_loss = metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
-                                      cg_damping=args.cg_damping, ls_max_steps=args.ls_max_steps,
-                                      ls_backtrack_ratio=args.ls_backtrack_ratio)
+        if not isinstance(policy, CvaMLPPolicy):
+            outer_loss = metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
+                                          cg_damping=args.cg_damping, ls_max_steps=args.ls_max_steps,
+                                          ls_backtrack_ratio=args.ls_backtrack_ratio)
 
         # -- logging
 

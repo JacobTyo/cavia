@@ -19,11 +19,18 @@ class Navigation2DEnv(gym.Env):
         (https://arxiv.org/abs/1703.03400)
     """
 
-    def __init__(self, task={}):
+    def __init__(self, task={}, finite=False):
         super(Navigation2DEnv, self).__init__()
 
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
-                                            shape=(2,), dtype=np.float32)
+        self.finite = finite
+
+        if self.finite:
+            self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
+                                                shape=(3,), dtype=np.float32)
+        else:
+            self.observation_space = spaces.Box(low=-np.inf, high=np.inf,
+                                                shape=(2,), dtype=np.float32)
+
         self.action_space = spaces.Box(low=-0.1, high=0.1,
                                        shape=(2,), dtype=np.float32)
 
@@ -31,6 +38,13 @@ class Navigation2DEnv(gym.Env):
         self._goal = task.get('goal', np.zeros(2, dtype=np.float32))
         self._state = np.zeros(2, dtype=np.float32)
         self.seed()
+        self.goal_id = -1
+
+    def set_finite(self, is_finite, total_tasks):
+        self.finite = is_finite
+        # get task
+        task, id = self.sample_tasks_finite(1, total_tasks)
+        self.reset_task(task[0], id)
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -41,12 +55,23 @@ class Navigation2DEnv(gym.Env):
         tasks = [{'goal': goal} for goal in goals]
         return tasks
 
-    def reset_task(self, task):
+    def sample_tasks_finite(self, num_tasks, total_num_tasks):
+        goals_list = np.linspace(-0.5, 0.5, total_num_tasks)
+        idxs = self.np_random.choice(len(goals_list), size=num_tasks)  # size=(num_tasks, 2))
+        goals = goals_list[idxs]
+        tasks = [{'goal': goal} for goal in goals]
+        return tasks, idxs
+
+    def reset_task(self, task, id=None):
+        self.goal_id = id
         self._task = task
         self._goal = task['goal']
 
     def reset(self, env=True):
         self._state = np.zeros(2, dtype=np.float32)
+        if self.finite:
+            tmp = np.ones_like(self._state)[0]
+            self._state = np.hstack((self._state, tmp*self.goal_id))
         return self._state
 
     def step(self, action):
@@ -58,5 +83,9 @@ class Navigation2DEnv(gym.Env):
         y = self._state[1] - self._goal[1]
         reward = -np.sqrt(x ** 2 + y ** 2)
         done = ((np.abs(x) < 0.01) and (np.abs(y) < 0.01))
+
+        # concatenate task id if finite data
+        if self.finite:
+            self._state = np.concatenate((self._state, self.goal_id), axis=1)
 
         return self._state, reward, done, self._task

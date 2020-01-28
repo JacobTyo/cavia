@@ -15,17 +15,19 @@ def make_env(env_name):
 
 
 class BatchSampler(object):
-    def __init__(self, env_name, batch_size, device, seed, num_workers=mp.cpu_count() - 1):
+    def __init__(self, env_name, batch_size, device, seed, num_workers=mp.cpu_count() - 1, total_tasks=None, cva=False):
         self.env_name = env_name
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
 
         self.queue = mp.Queue()
-        self.envs = SubprocVecEnv([make_env(env_name) for _ in range(num_workers)], queue=self.queue)
+        self.envs = SubprocVecEnv([make_env(env_name) for _ in range(num_workers)], queue=self.queue, cva=cva)
         self.envs.seed(seed)
         self._env = gym.make(env_name)
         self._env.seed(seed)
+        self.total_tasks = total_tasks
+        self.sample_tasks(self.total_tasks)
 
     def sample(self, policy, params=None, gamma=0.95, batch_size=None):
         if batch_size is None:
@@ -36,6 +38,7 @@ class BatchSampler(object):
         for _ in range(self.num_workers):
             self.queue.put(None)
         observations, batch_ids = self.envs.reset()
+        # I need to add id's here, although they should have been returned by the env?
         dones = [False]
         while (not all(dones)) or (not self.queue.empty()):
             with torch.no_grad():
@@ -53,5 +56,9 @@ class BatchSampler(object):
         return all(reset)
 
     def sample_tasks(self, num_tasks):
-        tasks = self._env.unwrapped.sample_tasks(num_tasks)
-        return tasks
+        if self.total_tasks is None:
+            tasks = self._env.unwrapped.sample_tasks(num_tasks)
+            return tasks
+        else:
+            tasks, idxs = self._env.unwrapped.sample_tasks_finite(num_tasks, self.total_tasks)
+            return tasks, idxs

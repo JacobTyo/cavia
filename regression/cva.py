@@ -55,13 +55,18 @@ def run(args, log_interval=5000, rerun=False):
                      device=args.device,
                      pdropout=args.pdropout
                      ).to(args.device)
+    # multiple_gpus = (torch.cuda.device_count() > 1)
+    # if multiple_gpus:
+    #     model = torch.nn.DataParallel(model).to(args.device)
 
     # intitialise meta-optimiser
     # (only on shared params - context parameters are *not* registered parameters of the model)
     model_params_noemb = [param for name, param in model.named_parameters() if 'embed' not in name]
     meta_optimiser = optim.Adam(model_params_noemb, args.lr_meta)
+    # if multiple_gpus:
+    #     embedding_optimizer = optim.Adam(model.module.embedding.parameters(), args.lr_inner)
+    # else:
     embedding_optimizer = optim.Adam(model.embedding.parameters(), args.lr_inner)
-
 
     # initialise loggers
     logger = Logger(args=args)
