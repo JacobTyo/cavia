@@ -81,13 +81,13 @@ class MetaLearner(object):
 
         return params, loss
 
-    def sample(self, tasks, first_order=False, idsx=None):
+    def sample(self, tasks, first_order=False, idxs=None):
         """Sample trajectories (before and after the update of the parameters) 
         for all the tasks `tasks`.
         """
         episodes = []
         losses = []
-        for task in tasks:
+        for task, idx in zip(tasks, idxs):
             self.sampler.reset_task(task)
             self.policy.reset_context()
             train_episodes = self.sampler.sample(self.policy, gamma=self.gamma)

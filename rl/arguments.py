@@ -77,6 +77,7 @@ def parse_args():
                         help='use this flag to run the CVA method.')
     parser.add_argument('--total_tasks', type=int, default=None,
                         help='if not set, use infinite tasks, else use the specified number.')
+    parser.add_argument('--which_gpu', type=str, default="0", help='if multiple gpu machine, which one to use')
 
     args = parser.parse_args()
 
@@ -84,9 +85,9 @@ def parse_args():
         args.num_workers = 1
 
     # use the GPU if available
-    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    args.device = torch.device("cuda:" + args.which_gpu if torch.cuda.is_available() else "cpu")
 
-    args.output_folder = 'maml' if args.maml else 'cavia'
+    args.output_folder = 'cva' if args.cva else 'maml' if args.maml else 'cavia'
 
     if args.maml and not args.halve_test_lr:
         warnings.warn('You are using MAML and not halving the LR at test time!')

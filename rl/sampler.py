@@ -50,9 +50,13 @@ class BatchSampler(object):
             observations, batch_ids = new_observations, new_batch_ids
         return episodes
 
-    def reset_task(self, task):
+    def reset_task(self, task, ids=None):
         tasks = [task for _ in range(self.num_workers)]
-        reset = self.envs.reset_task(tasks)
+        if ids is not None:
+            i = [ids for _ in range(self.num_workers)]
+            reset = self.envs.reset_task(tasks, i)
+        else:
+            reset = self.envs.reset_task(tasks)
         return all(reset)
 
     def sample_tasks(self, num_tasks):

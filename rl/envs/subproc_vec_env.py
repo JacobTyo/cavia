@@ -115,9 +115,13 @@ class SubprocVecEnv(gym.Env):
         observations, task_ids = zip(*results)
         return np.stack(observations), task_ids
 
-    def reset_task(self, tasks):
-        for remote, task in zip(self.remotes, tasks):
-            remote.send(('reset_task', task))
+    def reset_task(self, tasks, ids=None):
+        if ids is None:
+            for remote, task in zip(self.remotes, tasks):
+                remote.send(('reset_task', task))
+        else:
+            for remote, task in zip(self.remotes, zip(tasks, ids)):
+                remote.send(('reset_task', task))
         return np.stack([remote.recv() for remote in self.remotes])
 
     def seed(self, seed=None):

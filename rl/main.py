@@ -138,10 +138,11 @@ def main(args):
             tasks, idxs = sampler.sample_tasks(num_tasks=args.meta_batch_size)
         else:
             tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
+            idxs = None
 
         # do the inner-loop update for each task
         # this returns training (before update) and validation (after update) episodes
-        episodes, inner_losses = metalearner.sample(tasks, first_order=args.first_order)
+        episodes, inner_losses = metalearner.sample(tasks, first_order=args.first_order, idxs=idxs)
 
         # take the meta-gradient step
         if not isinstance(policy, CvaMLPPolicy):
