@@ -52,7 +52,8 @@ def run(args, log_interval=5000, rerun=False):
                      num_context_params=args.num_context_params,
                      num_tasks=args.num_fns + 20000,
                      n_hidden=args.num_hidden_layers,
-                     device=args.device
+                     device=args.device,
+                     pdropout=args.pdropout
                      ).to(args.device)
 
     # intitialise meta-optimiser
@@ -63,7 +64,7 @@ def run(args, log_interval=5000, rerun=False):
 
 
     # initialise loggers
-    logger = Logger()
+    logger = Logger(args=args)
     logger.best_valid_model = copy.deepcopy(model)
 
     # --- main training loop ---
@@ -223,6 +224,9 @@ def run(args, log_interval=5000, rerun=False):
 
 
 def eval_cva(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=False, offset=0):
+    # # don't use dropout maybe?
+    # model.pdropout = 0
+
     # logging
     losses = []
     gradnorms = []

@@ -40,10 +40,12 @@ def parse_args():
     parser.add_argument('--reinit_emb', action='store_true', default=False, help='reinitialize the embedding every step or not')
     parser.add_argument('--reset_emb', type=int, default=-1, help='if set (i.e. > -1), reset the embeddings every x steps.')
     parser.add_argument('--tpg', action='store_true', default=False, help='run Sine Wave Regresssion as a Two Player Game')
+    parser.add_argument('--pdropout', type=float, default=0, help='set >0 to use dropout for CVA')
+    parser.add_argument('--which_gpu', type=str, default="0", help='if multiple GPUs, select which one (default 0)')
 
     args = parser.parse_args()
 
     # use the GPU if available
-    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    args.device = torch.device("cuda:" + args.which_gpu if torch.cuda.is_available() else "cpu")
 
     return args

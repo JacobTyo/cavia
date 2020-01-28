@@ -5,7 +5,7 @@ import numpy as np
 
 class Logger:
 
-    def __init__(self):
+    def __init__(self, args=None):
         self.train_loss = []
         self.train_conf = []
 
@@ -24,6 +24,8 @@ class Logger:
         self.eval_time = 0
 
         self.best_valid_model = None
+
+        self.args = vars(args)
 
     def print_info(self, iter_idx, start_time):
         print(
