@@ -11,10 +11,11 @@ for num_fns in "${anum_fns[@]}"; do
       for tasks_per_metaupdate in "${atasks_per_metaupdate[@]}"; do
 #	for reset_num in "${reset_nums[@]}"; do 
           # normal
-          tsk='do'_${num_fns}_${num_eval_updates}_${num_inner_updates}_${tasks_per_metaupdate}
+          tsk='cp'$2'do'_${num_fns}_${num_eval_updates}_${num_inner_updates}_${tasks_per_metaupdate}
           python ./main.py --cva --n_iter 500000 --num_fns ${num_fns} --lr_inner 0.001 --lr_meta 0.001 \
             --tasks_per_metaupdate ${tasks_per_metaupdate} --num_inner_updates ${num_inner_updates} \
-            --num_eval_updates ${num_eval_updates} --id "${tsk}" --pdropout 0.25 --which_gpu $2
+            --num_eval_updates ${num_eval_updates} --id "${tsk}" \
+	    --num_context_params $2
 #        done
       done
     done
