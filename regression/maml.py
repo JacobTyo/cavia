@@ -67,7 +67,7 @@ def run(args, log_interval=5000, rerun=False):
                                 args.lr_meta)
 
     # initialise loggers
-    logger = Logger()
+    logger = Logger(args)
     logger.best_valid_model = copy.deepcopy(model_outer)
 
     for i_iter in range(args.n_iter):
@@ -175,19 +175,19 @@ def run(args, log_interval=5000, rerun=False):
             logger.time_eval()
 
             # evaluate on training set
-            loss_mean, loss_conf = eval(args, copy.copy(model_outer), task_family=task_family_train,
+            loss_mean, loss_conf, _ = eval(args, copy.copy(model_outer), task_family=task_family_train,
                                         num_updates=args.num_inner_updates)
             logger.train_loss.append(loss_mean)
             logger.train_conf.append(loss_conf)
 
             # evaluate on test set
-            loss_mean, loss_conf = eval(args, copy.copy(model_outer), task_family=task_family_valid,
+            loss_mean, loss_conf, _ = eval(args, copy.copy(model_outer), task_family=task_family_valid,
                                         num_updates=args.num_inner_updates)
             logger.valid_loss.append(loss_mean)
             logger.valid_conf.append(loss_conf)
 
             # evaluate on validation set
-            loss_mean, loss_conf = eval(args, copy.copy(model_outer), task_family=task_family_test,
+            loss_mean, loss_conf, ft_model = eval(args, copy.copy(model_outer), task_family=task_family_test,
                                         num_updates=args.num_inner_updates)
             logger.test_loss.append(loss_mean)
             logger.test_conf.append(loss_conf)
@@ -202,6 +202,7 @@ def run(args, log_interval=5000, rerun=False):
             if logger.valid_loss[-1] == np.min(logger.valid_loss):
                 print('saving best model at iter', i_iter)
                 logger.best_valid_model = copy.copy(model_outer)
+                logger.best_ft_model = copy.copy(ft_model)
 
             # visualise results
             if args.task == 'celeba':
@@ -273,6 +274,8 @@ def eval(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=Fal
         # compute true loss on entire input range
         losses.append(F.mse_loss(model(input_range), target_function(input_range)).detach().item())
 
+    ft_model = copy.deepcopy(model.state_dict())
+
     # reset network weights
     model.weights = [w.clone() for w in copy_weights]
     model.biases = [b.clone() for b in copy_biases]
@@ -282,6 +285,6 @@ def eval(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=Fal
     losses_conf = st.t.interval(0.95, len(losses) - 1, loc=losses_mean, scale=st.sem(losses))
 
     if not return_gradnorm:
-        return losses_mean, np.mean(np.abs(losses_conf - losses_mean))
+        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), ft_model
     else:
         return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), np.mean(gradnorms)

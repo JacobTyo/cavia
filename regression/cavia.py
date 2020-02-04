@@ -63,7 +63,7 @@ def run(args, log_interval=5000, rerun=False):
     meta_optimiser = optim.Adam(model.parameters(), args.lr_meta)
 
     # initialise loggers
-    logger = Logger()
+    logger = Logger(args)
     logger.best_valid_model = copy.deepcopy(model)
 
     # --- main training loop ---
@@ -149,19 +149,19 @@ def run(args, log_interval=5000, rerun=False):
             logger.time_eval()
 
             # evaluate on training set
-            loss_mean, loss_conf = eval_cavia(args, copy.deepcopy(model), task_family=task_family_train,
+            loss_mean, loss_conf, _ = eval_cavia(args, copy.deepcopy(model), task_family=task_family_train,
                                               num_updates=args.num_inner_updates)
             logger.train_loss.append(loss_mean)
             logger.train_conf.append(loss_conf)
 
             # evaluate on test set
-            loss_mean, loss_conf = eval_cavia(args, copy.deepcopy(model), task_family=task_family_valid,
+            loss_mean, loss_conf, _ = eval_cavia(args, copy.deepcopy(model), task_family=task_family_valid,
                                               num_updates=args.num_inner_updates)
             logger.valid_loss.append(loss_mean)
             logger.valid_conf.append(loss_conf)
 
             # evaluate on validation set
-            loss_mean, loss_conf = eval_cavia(args, copy.deepcopy(model), task_family=task_family_test,
+            loss_mean, loss_conf, ft_model = eval_cavia(args, copy.deepcopy(model), task_family=task_family_test,
                                               num_updates=args.num_inner_updates)
             logger.test_loss.append(loss_mean)
             logger.test_conf.append(loss_conf)
@@ -176,6 +176,7 @@ def run(args, log_interval=5000, rerun=False):
             if logger.valid_loss[-1] == np.min(logger.valid_loss):
                 print('saving best model at iter', i_iter)
                 logger.best_valid_model = copy.deepcopy(model)
+                logger.best_ft_model = copy.deepcopy(ft_model)
 
             # visualise results
             if args.task == 'celeba':
@@ -247,6 +248,6 @@ def eval_cavia(args, model, task_family, num_updates, n_tasks=100, return_gradno
     losses_mean = np.mean(losses)
     losses_conf = st.t.interval(0.95, len(losses) - 1, loc=losses_mean, scale=st.sem(losses))
     if not return_gradnorm:
-        return losses_mean, np.mean(np.abs(losses_conf - losses_mean))
+        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), copy.deepcopy(model.state_dict())
     else:
         return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), np.mean(gradnorms)

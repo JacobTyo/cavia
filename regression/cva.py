@@ -188,19 +188,19 @@ def run(args, log_interval=5000, rerun=False):
             logger.time_eval()
 
             # evaluate on training set
-            loss_mean, loss_conf = eval_cva(args, copy.deepcopy(model), task_family_train,
+            loss_mean, loss_conf, _ = eval_cva(args, copy.deepcopy(model), task_family_train,
                                             args.num_eval_updates)
             logger.train_loss.append(loss_mean)
             logger.train_conf.append(loss_conf)
 
             # evaluate on test set
-            loss_mean, loss_conf = eval_cva(args, copy.deepcopy(model), task_family_valid,
+            loss_mean, loss_conf, _ = eval_cva(args, copy.deepcopy(model), task_family_valid,
                                             args.num_eval_updates, offset=args.num_fns)
             logger.valid_loss.append(loss_mean)
             logger.valid_conf.append(loss_conf)
 
             # evaluate on validation set
-            loss_mean, loss_conf = eval_cva(args, copy.deepcopy(model), task_family_test,
+            loss_mean, loss_conf, ft_model = eval_cva(args, copy.deepcopy(model), task_family_test,
                                             args.num_eval_updates, offset=args.num_fns+10000)
             logger.test_loss.append(loss_mean)
             logger.test_conf.append(loss_conf)
@@ -211,10 +211,11 @@ def run(args, log_interval=5000, rerun=False):
             # save logging results
             utils.save_obj(logger, path)
 
-            # save best model
+            # save best model, and the finetuned model
             if logger.valid_loss[-1] == np.min(logger.valid_loss):
                 print('saving best model at iter', i_iter)
                 logger.best_valid_model = copy.deepcopy(model)
+                logger.best_ft_model = copy.deepcopy(ft_model)
 
             # visualise results
             if args.task == 'celeba':
@@ -301,6 +302,6 @@ def eval_cva(args, model, task_family, num_updates, n_tasks=100, return_gradnorm
     losses_mean = np.mean(losses)
     losses_conf = st.t.interval(0.95, len(losses) - 1, loc=losses_mean, scale=st.sem(losses))
     if not return_gradnorm:
-        return losses_mean, np.mean(np.abs(losses_conf - losses_mean))
+        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), copy.deepcopy(model)
     else:
         return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), np.mean(gradnorms)

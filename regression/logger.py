@@ -25,6 +25,8 @@ class Logger:
 
         self.best_valid_model = None
 
+        self.best_ft_model = None
+
         self.args = vars(args)
 
     def print_info(self, iter_idx, start_time):
