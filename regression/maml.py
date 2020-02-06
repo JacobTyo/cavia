@@ -274,8 +274,6 @@ def eval(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=Fal
         # compute true loss on entire input range
         losses.append(F.mse_loss(model(input_range), target_function(input_range)).detach().item())
 
-    ft_model = copy.deepcopy(model.state_dict())
-
     # reset network weights
     model.weights = [w.clone() for w in copy_weights]
     model.biases = [b.clone() for b in copy_biases]
@@ -285,6 +283,6 @@ def eval(args, model, task_family, num_updates, n_tasks=100, return_gradnorm=Fal
     losses_conf = st.t.interval(0.95, len(losses) - 1, loc=losses_mean, scale=st.sem(losses))
 
     if not return_gradnorm:
-        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), ft_model
+        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), model
     else:
         return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), np.mean(gradnorms)

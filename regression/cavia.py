@@ -197,7 +197,7 @@ def eval_cavia(args, model, task_family, num_updates, n_tasks=100, return_gradno
     # logging
     losses = []
     gradnorms = []
-
+    all_contexts = []
     # --- inner loop ---
 
     for t in range(n_tasks):
@@ -235,6 +235,7 @@ def eval_cavia(args, model, task_family, num_updates, n_tasks=100, return_gradno
             else:
                 model.context_params = model.context_params - args.lr_inner * task_gradients
 
+            all_contexts.append(model.context_params.detach())
             # keep track of gradient norms
             gradnorms.append(task_gradients[0].norm().item())
 
@@ -248,6 +249,8 @@ def eval_cavia(args, model, task_family, num_updates, n_tasks=100, return_gradno
     losses_mean = np.mean(losses)
     losses_conf = st.t.interval(0.95, len(losses) - 1, loc=losses_mean, scale=st.sem(losses))
     if not return_gradnorm:
-        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), copy.deepcopy(model.state_dict())
+        np.save(args.id+'all_contexts', all_contexts)
+        model.context_params = model.context_params.detach()
+        return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), model
     else:
         return losses_mean, np.mean(np.abs(losses_conf - losses_mean)), np.mean(gradnorms)
