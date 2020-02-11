@@ -49,14 +49,14 @@ def run(args, log_interval=5000, rerun=False):
     # initialise network
     if args.context_layer > -1:
         model = CvaModelAlt(n_in=task_family_train.num_inputs,
-                         n_out=task_family_train.num_outputs,
-                         num_context_params=args.num_context_params,
-                         context_layer=args.context_layer,
-                         num_tasks=args.num_fns + 20000,
-                         n_hidden=args.num_hidden_layers,
-                         device=args.device,
-                         pdropout=args.pdropout
-                         ).to(args.device)
+                            n_out=task_family_train.num_outputs,
+                            num_context_params=args.num_context_params,
+                            context_layer=args.context_layer,
+                            num_tasks=args.num_fns + 20000,
+                            n_hidden=args.num_hidden_layers,
+                            device=args.device,
+                            pdropout=args.pdropout
+                            ).to(args.device)
     else:
         model = CvaModel(n_in=task_family_train.num_inputs,
                          n_out=task_family_train.num_outputs,
@@ -89,9 +89,6 @@ def run(args, log_interval=5000, rerun=False):
     # --- main training loop ---
 
     for i_iter in range(args.n_iter):
-
-        model_scheduler.step()
-        emb_scheduler.step()
 
         # initialise meta-gradient
         meta_gradient = [0 for _ in range(len(model.state_dict()))]
@@ -197,6 +194,10 @@ def run(args, log_interval=5000, rerun=False):
         # do update step on shared model and embeddings
         meta_optimiser.step()
         embedding_optimizer.step()
+
+        # take a step on the learning rate scheduler
+        model_scheduler.step()
+        emb_scheduler.step()
 
         # ------------ logging ------------
 

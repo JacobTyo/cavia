@@ -93,6 +93,8 @@ class CvaModelAlt(nn.Module):
         self.pdropout = pdropout
         self.use_do = (True if self.pdropout > 0 else False)
         self.context_layer = context_layer
+        self.num_context_params = num_context_params
+        self.len_n_hidden = len(n_hidden)
 
         # fully connected layers
         self.fc_layers = nn.ModuleList()
@@ -103,6 +105,7 @@ class CvaModelAlt(nn.Module):
         self.fc_layers.append(nn.Linear(n_in, n_hidden[0]))
         if self.use_do:
             self.do_layers.append(nn.Dropout(p=self.pdropout))
+
         for k in range(len(n_hidden) - 1):
             if k == self.context_layer:
                 # add the context here
@@ -114,7 +117,10 @@ class CvaModelAlt(nn.Module):
             if self.use_do:
                 self.do_layers.append(nn.Dropout(p=self.pdropout))
 
-        self.fc_layers.append(nn.Linear(n_hidden[-1], n_out))
+        if len(n_hidden) - 1 == self.context_layer:
+            self.fc_layers.append(nn.Linear(n_hidden[-1]+self.num_context_params, n_out))
+        else:
+            self.fc_layers.append(nn.Linear(n_hidden[-1], n_out))
 
         self.num_context_params = num_context_params
         # use embedding for each task
@@ -127,25 +133,19 @@ class CvaModelAlt(nn.Module):
         latent = x[:, self.n_in:]
         x = x[:, :self.n_in]
 
-        print('-1 print')
-        print(x.shape)
-        print(latent.shape)
-
         latent = self.embedding(latent.flatten().long()).float()
 
         for k in range(len(self.fc_layers) - 1):
-            if k == self.context_layer:
-                print(str(k) + ' layer')
-                print(self.fc_layers[k])
-                print(x.shape)
-                print(latent.shape)
+            if k-1 == self.context_layer:
                 x = torch.cat((x, latent.reshape(-1, self.num_context_params)), dim=1).float()
-                print('updated')
-                print(x.shape)
+
             x = F.relu(self.fc_layers[k](x))
             # do dropout if needed
             if self.use_do:
                 x = self.do_layers[k](x)
+
+        if self.context_layer == self.len_n_hidden - 1:
+            x = torch.cat((x, latent.reshape(-1, self.num_context_params)), dim=1).float()
         y = self.fc_layers[-1](x)
 
         return y
