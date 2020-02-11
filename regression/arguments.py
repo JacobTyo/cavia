@@ -42,6 +42,10 @@ def parse_args():
     parser.add_argument('--tpg', action='store_true', default=False, help='run Sine Wave Regresssion as a Two Player Game')
     parser.add_argument('--pdropout', type=float, default=0, help='set >0 to use dropout for CVA')
     parser.add_argument('--which_gpu', type=str, default="0", help='if multiple GPUs, select which one (default 0)')
+    parser.add_argument('--reset_emb_decay', type=int, default=1, help='integer to increase/decrease te frequency that the embeddings are reset.')
+    parser.add_argument('--lr_scheduler_period', type=int, default=5000, help='decrease lr every this many steps')
+    parser.add_argument('--lr_model_decay', type=float, default=1, help='how much to decay the models learning rate by every step')
+    parser.add_argument('--lr_emb_decay', type=float, default=1, help='how much to decay the embedding learning rate by every step')
 
     args = parser.parse_args()
 

@@ -29,3 +29,5 @@ classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-test.p
 classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-train.pkl
 
 classification/data/miniimagenet/images/mini-imagenet/mini-imagenet-cache-val.pkl
+
+*.npy

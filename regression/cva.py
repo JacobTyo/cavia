@@ -68,6 +68,9 @@ def run(args, log_interval=5000, rerun=False):
     # else:
     embedding_optimizer = optim.Adam(model.embedding.parameters(), args.lr_inner)
 
+    model_scheduler = torch.optim.lr_scheduler.StepLR(meta_optimiser, args.lr_scheduler_period, args.lr_model_decay)
+    emb_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, args.lr_scheduler_period, args.lr_emb_decay)
+
     # initialise loggers
     logger = Logger(args=args)
     logger.best_valid_model = copy.deepcopy(model)
@@ -75,6 +78,9 @@ def run(args, log_interval=5000, rerun=False):
     # --- main training loop ---
 
     for i_iter in range(args.n_iter):
+
+        model_scheduler.step()
+        emb_scheduler.step()
 
         # initialise meta-gradient
         meta_gradient = [0 for _ in range(len(model.state_dict()))]
@@ -90,6 +96,7 @@ def run(args, log_interval=5000, rerun=False):
         if args.reset_emb > -1:
             if i_iter % args.reset_emb == 0:
                 model.zero_embeddings()
+                args.reset_emb = int(args.reset_emb * args.reset_emb_decay)
 
         # --- inner loop ---
 
