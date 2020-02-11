@@ -13,7 +13,7 @@ import torch.optim as optim
 
 import utils
 import tasks_sine, tasks_celebA
-from cva_model import CvaModel
+from cva_model import CvaModel, CvaModelAlt
 from logger import Logger
 
 
@@ -47,14 +47,25 @@ def run(args, log_interval=5000, rerun=False):
         raise NotImplementedError
 
     # initialise network
-    model = CvaModel(n_in=task_family_train.num_inputs,
-                     n_out=task_family_train.num_outputs,
-                     num_context_params=args.num_context_params,
-                     num_tasks=args.num_fns + 20000,
-                     n_hidden=args.num_hidden_layers,
-                     device=args.device,
-                     pdropout=args.pdropout
-                     ).to(args.device)
+    if args.context_layer > -1:
+        model = CvaModelAlt(n_in=task_family_train.num_inputs,
+                         n_out=task_family_train.num_outputs,
+                         num_context_params=args.num_context_params,
+                         context_layer=args.context_layer,
+                         num_tasks=args.num_fns + 20000,
+                         n_hidden=args.num_hidden_layers,
+                         device=args.device,
+                         pdropout=args.pdropout
+                         ).to(args.device)
+    else:
+        model = CvaModel(n_in=task_family_train.num_inputs,
+                         n_out=task_family_train.num_outputs,
+                         num_context_params=args.num_context_params,
+                         num_tasks=args.num_fns + 20000,
+                         n_hidden=args.num_hidden_layers,
+                         device=args.device,
+                         pdropout=args.pdropout
+                         ).to(args.device)
     # multiple_gpus = (torch.cuda.device_count() > 1)
     # if multiple_gpus:
     #     model = torch.nn.DataParallel(model).to(args.device)

@@ -46,6 +46,7 @@ def parse_args():
     parser.add_argument('--lr_scheduler_period', type=int, default=5000, help='decrease lr every this many steps')
     parser.add_argument('--lr_model_decay', type=float, default=1, help='how much to decay the models learning rate by every step')
     parser.add_argument('--lr_emb_decay', type=float, default=1, help='how much to decay the embedding learning rate by every step')
+    parser.add_argument('--context_layer', type=int, default=-1, help='which hidden layer to add the embedding to')
 
     args = parser.parse_args()
 
