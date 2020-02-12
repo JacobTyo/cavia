@@ -82,7 +82,38 @@ def run(args, log_interval=5000, rerun=False):
 
         # sample tasks
         if args.num_fns > -1:
-            target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+            # if tpg is selected, first figure out which tasks we should use
+            if args.tpg:
+                if args.tasks_per_metaupdate > args.num_tasks_check:
+                    args.num_tasks_check = args.tasks_per_metaupdate
+
+                target_functions, idxs = task_family_train.sample_tasks(args.num_tasks_check)
+
+                # now run a forward pass on each target function to see which we want to train on.
+                # not that initially this will not be optimized as we will not keep track of the results of each pass
+                funclosses = []
+                with torch.no_grad():
+                    for tf, tfid in zip(target_functions, idxs):
+                        train_inputs = task_family_train.sample_inputs(args.num_points_check,
+                                                                       args.use_ordered_pixels).to(args.device)
+
+                        # this doesn't happen in cavia
+                        train_outputs = model_inner(train_inputs)
+
+                        # get targets
+                        train_targets = tf(train_inputs)
+
+                        # ------------ update on current task ------------
+
+                        # compute loss for current task
+                        task_loss = F.mse_loss(train_outputs, train_targets)
+                        funclosses.append(task_loss.item())
+
+                idx = np.argpartition(np.asarray(funclosses), -args.tasks_per_metaupdate)
+                target_functions = np.asarray(target_functions)[idx[-args.tasks_per_metaupdate:]].tolist()
+                idxs = np.asarray(idxs)[idx[-args.tasks_per_metaupdate:]].tolist()
+            else:
+                target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
         else:
             target_functions = task_family_train.sample_tasks(args.tasks_per_metaupdate)
 

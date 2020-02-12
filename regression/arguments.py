@@ -39,7 +39,6 @@ def parse_args():
     parser.add_argument('--id', type=str, default="testing", help='just used for naming')
     parser.add_argument('--reinit_emb', action='store_true', default=False, help='reinitialize the embedding every step or not')
     parser.add_argument('--reset_emb', type=int, default=-1, help='if set (i.e. > -1), reset the embeddings every x steps.')
-    parser.add_argument('--tpg', action='store_true', default=False, help='run Sine Wave Regresssion as a Two Player Game')
     parser.add_argument('--pdropout', type=float, default=0, help='set >0 to use dropout for CVA')
     parser.add_argument('--which_gpu', type=str, default="0", help='if multiple GPUs, select which one (default 0)')
     parser.add_argument('--reset_emb_decay', type=int, default=1, help='integer to increase/decrease te frequency that the embeddings are reset.')
@@ -47,6 +46,11 @@ def parse_args():
     parser.add_argument('--lr_model_decay', type=float, default=1, help='how much to decay the models learning rate by every step')
     parser.add_argument('--lr_emb_decay', type=float, default=1, help='how much to decay the embedding learning rate by every step')
     parser.add_argument('--context_layer', type=int, default=-1, help='which hidden layer to add the embedding to')
+
+    # two player game arguments
+    parser.add_argument('--tpg', action='store_true', default=False, help='run Sine Wave Regresssion as a Two Player Game')
+    parser.add_argument('--num_tasks_check', type=int, default=100, help='the number of tasks to test per iteration for selection.')
+    parser.add_argument('--num_points_check', type=int, default=5, help='how many points per task to check during adversarial selection')
 
     args = parser.parse_args()
 

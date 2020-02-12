@@ -94,7 +94,42 @@ def run(args, log_interval=5000, rerun=False):
         meta_gradient = [0 for _ in range(len(model.state_dict()))]
 
         # sample tasks
-        target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
+        if args.tpg:
+
+            if args.tasks_per_metaupdate > args.num_tasks_check:
+                args.num_tasks_check = args.tasks_per_metaupdate
+
+            target_functions, idxs = task_family_train.sample_tasks(args.num_tasks_check)
+
+            # now run a forward pass on each target function to see which we want to train on.
+            # not that initially this will not be optimized as we will not keep track of the results of each pass
+            funclosses = []
+            with torch.no_grad():
+                for tf, tfid in zip(target_functions, idxs):
+                    train_inputs = task_family_train.sample_inputs(args.num_points_check, args.use_ordered_pixels).to(args.device)
+                    # append id's
+                    train_inputs_orig = train_inputs.clone()
+                    train_inputs = torch.cat(
+                        (train_inputs, (tfid * torch.ones((train_inputs.shape[0], 1))).to(args.device)), dim=1)
+
+                    # this doesn't happen in cavia
+                    train_outputs = model(train_inputs)
+
+                    # get targets
+                    train_targets = tf(train_inputs_orig)
+
+                    # ------------ update on current task ------------
+
+                    # compute loss for current task
+                    task_loss = F.mse_loss(train_outputs, train_targets)
+                    funclosses.append(task_loss.item())
+
+            idx = np.argpartition(np.asarray(funclosses), -args.tasks_per_metaupdate)
+            target_functions = np.asarray(target_functions)[idx[-args.tasks_per_metaupdate:]].tolist()
+            idxs = np.asarray(idxs)[idx[-args.tasks_per_metaupdate:]].tolist()
+
+        else:
+            target_functions, idxs = task_family_train.sample_tasks(args.tasks_per_metaupdate)
 
         # if flag is set, reinitialize embedding
         if args.reinit_emb:
@@ -123,35 +158,6 @@ def run(args, log_interval=5000, rerun=False):
             # append id's
             train_inputs_orig = train_inputs.clone()
             train_inputs = torch.cat((train_inputs, (idxs[t]*torch.ones((train_inputs.shape[0], 1))).to(args.device)), dim=1)
-
-
-            for _ in range(args.num_inner_updates):
-                # forward through model
-
-                # this doesn't happen in cavia
-                train_outputs = model(train_inputs)
-
-                # get targets
-                train_targets = target_functions[t](train_inputs_orig)
-
-                # ------------ update on current task ------------
-
-                # compute loss for current task
-                task_loss = F.mse_loss(train_outputs, train_targets)
-
-                # compute gradient wrt context params
-                # can add the create_graph=not args.first_order here, but this makes it cva
-                embedding_optimizer.zero_grad()
-                task_loss.backward()
-                # the above stores the gradients in each tensors .grad parameter, keep track of those
-                for i, param in enumerate(model.parameters()):
-                    meta_gradient[i] += param.grad
-
-                embedding_optimizer.step()
-
-                # task_gradients = torch.autograd.grad(task_loss, model.embedding.parameters())[0]
-
-                # update embeddings (remember that the tensors keep track of the gradients)
 
             # ------------ compute meta-gradient on test loss of current task ------------
 

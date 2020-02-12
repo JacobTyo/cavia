@@ -50,10 +50,3 @@ class Logger:
 
     def time_eval(self):
         self.eval_start_time = time.time()
-
-
-class LoggerGame(Logger):
-    def __init__(self):
-        super().__init__()
-        self.best_valid_task_model = None
-        self.best_valid_opt_model = None

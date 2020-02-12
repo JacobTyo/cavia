@@ -15,7 +15,7 @@ import utils
 import tasks_sine, tasks_celebA
 from gameopt_model import GameOptModel
 from gametask_model import GameTaskModel
-from logger import LoggerGame
+from logger import Logger
 
 from torch.utils.tensorboard import SummaryWriter
 
