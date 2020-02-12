@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-anum_fns=(100)
-anum_eval_updates=(40 100)
+anum_fns=($1)
+anum_eval_updates=(40)
 anum_inner_updates=(0)
-atasks_per_metaupdate=(1 5 10)
+atasks_per_metaupdate=(10)
 alr_inner=(0.001)
 alr_meta=(0.001)
 alr_scheduler_period=(100 5000)
-alr_model_decay=(0.9 0.99)
-alr_emb_decay=(0.9 0.99)
-apdropout=(0 0.2)
-areset_emb=(-1 100 1000)
-areset_emb_decay=($1)
+alr_model_decay=(0.99)
+alr_emb_decay=(0.9)
+apdropout=(0.2)
+areset_emb=(10)
+areset_emb_decay=(1)
 
 for num_fns in "${anum_fns[@]}"; do
   for num_eval_updates in "${anum_eval_updates[@]}"; do
@@ -26,14 +26,14 @@ for num_fns in "${anum_fns[@]}"; do
                     for reset_emb in "${areset_emb[@]}"; do
                       for reset_emb_decay in "${areset_emb_decay[@]}"; do
 
-                        tsk="search_nf"${num_fns}"_lri"${lr_inner}"_lrm"${lr_meta}"_lrs"${lr_scheduler_period}"_lrmd"${lr_model_decay}"_lred"${lr_emb_decay}"_tpu"${tasks_per_metaupdate}"_neu"${num_eval_updates}"_dop"${pdropout}"_re"${reset_emb}"_red"${reset_emb_decay}
+                        tsk="selected_nf"${num_fns}"_lri"${lr_inner}"_lrm"${lr_meta}"_lrs"${lr_scheduler_period}"_lrmd"${lr_model_decay}"_lred"${lr_emb_decay}"_tpu"${tasks_per_metaupdate}"_neu"${num_eval_updates}"_dop"${pdropout}"_re"${reset_emb}"_red"${reset_emb_decay}
 
                         echo "starting " ${tsk}
 
                         python ./main.py \
                           --cva \
                           --id "${tsk}" \
-                          --n_iter 8001 \
+                          --n_iter 50000 \
                           --num_fns ${num_fns} \
                           --lr_inner ${lr_inner} \
                           --lr_meta ${lr_meta} \
