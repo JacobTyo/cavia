@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-iterations=8001
+iterations=50000
 anum_fns=(1000)
 anum_eval_updates=(10)
 anum_inner_updates=(10)
@@ -13,7 +13,7 @@ alr_emb_decay=(1)
 apdropout=(0)
 areset_emb=(-1)
 areset_emb_decay=(1)
-anum_tasks_check=($1) # 10 50 100 1000
+anum_tasks_check=(100) # 10 50 100 1000
 anum_points_check=(10)
 
 for num_fns in "${anum_fns[@]}"; do

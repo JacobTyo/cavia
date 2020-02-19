@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-iterations=8001
+iterations=50000
 anum_fns=(1000)
 anum_eval_updates=(40)
 anum_inner_updates=(0)
@@ -13,8 +13,8 @@ alr_emb_decay=(1)
 apdropout=(0)
 areset_emb=(-1)
 areset_emb_decay=(1)
-anum_tasks_check=($1) # 10 50 100 1000
-anum_points_check=(1 5 10)
+anum_tasks_check=(100) # 10 50 100 1000
+anum_points_check=(10)
 
 for num_fns in "${anum_fns[@]}"; do
   for num_eval_updates in "${anum_eval_updates[@]}"; do
@@ -31,7 +31,7 @@ for num_fns in "${anum_fns[@]}"; do
                         for num_tasks_check in "${anum_tasks_check[@]}"; do
                           for num_points_check in "${anum_points_check[@]}"; do
 
-                            tsk="search_nf${num_fns}_lri${lr_inner}_lrm${lr_meta}_lrs${lr_scheduler_period}_lrmd${lr_model_decay}_lred${lr_emb_decay}_tpu${tasks_per_metaupdate}_neu${num_eval_updates}_dop${pdropout}_re${reset_emb}_red${reset_emb_decay}_ntc${num_tasks_check}_npc${num_points_check}"
+                            tsk="tpg_nf${num_fns}_lri${lr_inner}_lrm${lr_meta}_lrs${lr_scheduler_period}_lrmd${lr_model_decay}_lred${lr_emb_decay}_tpu${tasks_per_metaupdate}_neu${num_eval_updates}_dop${pdropout}_re${reset_emb}_red${reset_emb_decay}_ntc${num_tasks_check}_npc${num_points_check}"
 
                             echo "starting " ${tsk}
 
