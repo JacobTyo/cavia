@@ -52,6 +52,12 @@ def parse_args():
     parser.add_argument('--num_tasks_check', type=int, default=100, help='the number of tasks to test per iteration for selection.')
     parser.add_argument('--num_points_check', type=int, default=5, help='how many points per task to check during adversarial selection')
 
+    # task prediction arguments
+    parser.add_argument('--vanilla', action='store_true', default=False)
+    parser.add_argument('--tp_hidden_layers', type=int, nargs='+', default=[40, 12, 40])
+    parser.add_argument('--n_iter_tp', type=int, default=10000, help='number of task predictor training iterations')
+
+
     args = parser.parse_args()
 
     # use the GPU if available
